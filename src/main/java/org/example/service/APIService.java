@@ -19,13 +19,12 @@ public class APIService {
 
     private final String groqToken;
     private final String togetherToken;
-    private String instruction;
 
     public static APIService getInstance() {
         return instance;
     }
     private APIService() {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         groqToken = dotenv.get("GROQ_KEY");
         togetherToken = dotenv.get("TOGETHER_KEY");
     }
@@ -33,8 +32,9 @@ public class APIService {
 
     public String callAPI(APIParam apiParam) throws Exception {
 
-        String url = "";
-        String token = "";
+        String url;
+        String token;
+        String instruction;
 
         switch (apiParam.model().platform) {
             case GROQ -> {
