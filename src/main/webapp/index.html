@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>레시피 </title>
+
+    <style>
+        #response {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap; /* 줄바꿈 유지를 위해 추가 */
+        }
+        #loading {
+            margin-top: 10px;
+            font-style: italic;
+            color: gray;
+            display: none; /* 초기에는 숨김 */
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="response">여기에 결과가 표시됩니다</div>
+    <div id="loading">로딩 중...</div>
+    <form id="controller">
+        <div>
+            <input type="text" id="prompt" placeholder="질문을 입력하세요">
+        </div>
+        <div>
+            <select id="model">
+                <option value="GROQ_LLAMA">GROQ</option>
+                <option value="TOGETHER_LLAMA">TOGETHER</option>
+            </select>
+        </div>
+        <button>묻기</button>
+    </form>
+</div>
+<script>
+    const controller = document.querySelector("#controller");
+    const responseDiv = document.querySelector("#response"); // response div 요소 선택
+    const loadingDiv = document.querySelector("#loading"); // 로딩 div 요소 선택
+
+    controller.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const prompt = document.querySelector("#prompt").value;
+        const model = document.querySelector("#model").value;
+
+        if (!prompt) {
+            alert("질문을 입력해주세요."); // 질문이 없을 경우 알림
+            return;
+        }
+
+        responseDiv.innerHTML = "API 호출 중..."; // 로딩 메시지 표시
+        loadingDiv.style.display = 'block'; // 로딩 표시 활성화
+
+
+        try {
+            const response = await fetch(`./api?prompt=${prompt}&model=${model}`, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`); // HTTP 에러 처리
+            }
+
+            const json = await response.json(); // ⭐️⭐️⭐️ json 변수 선언 및 할당 ⭐️⭐️⭐️
+<!--            alert(JSON.stringify(json)); // ⚠️⚠️⚠️ 오류 발생 가능 지점: json 변수 사용 ⚠️⚠️⚠️-->
+
+
+            if (json && json.content) {
+                responseDiv.innerHTML = json.content; // response div에 결과 출력 (alert 대신)
+            } else {
+                responseDiv.innerHTML = "API 응답 형식이 잘못되었습니다."; // content 없을 경우 오류 메시지
+                console.error("API 응답 데이터 구조 오류:", json); // 콘솔에 오류 로깅
+            }
+
+
+        } catch (error) {
+            console.error("API 호출 오류:", error); // 개발자 콘솔에 자세한 오류 기록
+            responseDiv.innerHTML = "API 호출 중 오류가 발생했습니다."; // 사용자에게 오류 메시지 표시
+        } finally {
+            loadingDiv.style.display = 'none'; // 로딩 표시 비활성화 (성공/실패 모두)
+        }
+    });
+</script>
+</body>
+</html>
